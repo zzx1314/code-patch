@@ -10,16 +10,34 @@
     "Other"
   ],
   "activationEvents": [
-    "onCommand:code-patch.ask"
+    "*"
   ],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
       {
         "command": "code-patch.ask",
-        "title": "AI: 分析选中代码"
+        "title": "CodePatch: Patch Selection"
       }
-    ]
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "codePatch",
+          "title": "CodePatch",
+          "icon": "media/icon.svg"
+        }
+      ]
+    },
+    "views": {
+      "codePatch": [
+        {
+          "id": "codePatch.chat",
+          "name": "Chat",
+          "type": "webview"
+        }
+      ]
+    }
   },
   "scripts": {
     "vscode:prepublish": "pnpm run compile",

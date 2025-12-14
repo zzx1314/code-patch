@@ -1,53 +1,36 @@
 import * as vscode from "vscode";
+import { ChatViewProvider } from "./chatView";
+import { CHAT_VIEW_ID } from "./constants";
 
 export function activate(context: vscode.ExtensionContext) {
-  vscode.window.showInformationMessage("ai-helper activated!");
-  const disposable = vscode.commands.registerCommand(
-    "ai-helper.ask",
-    async () => {
-      const editor = vscode.window.activeTextEditor;
-      if (!editor) return;
+  try {
+    console.log("🔥 CodePatch activated");
 
-      const selection = editor.selection;
-      const text = editor.document.getText(selection);
-      if (!text) {
-        vscode.window.showInformationMessage("请先选中一段代码！");
-        return;
-      }
+    const provider = new ChatViewProvider(context);
 
-      vscode.window.showInformationMessage("AI 正在生成...");
+    context.subscriptions.push(
+      vscode.window.registerWebviewViewProvider(
+        CHAT_VIEW_ID,
+        provider,
+        {
+          webviewOptions: {
+            retainContextWhenHidden: true
+          }
+        }
+      )
+    );
 
-      const response = await fetch("http://localhost:11434/api/generate", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          model: "qwen2.5-coder:7b",
-          prompt: text,
-          stream: false, // 关键
-        }),
-      });
+    // 可选：方便调试
+    (globalThis as any).__CODE_PATCH__ = {
+      provider
+    };
 
-      if (!response.ok) {
-        vscode.window.showErrorMessage("Ollama 请求失败");
-        return;
-      }
-
-      const data: any = await response.json();
-
-      const aiCode = data.response ?? "";
-
-      await editor.edit((editBuilder) => {
-        editBuilder.insert(
-          selection.end,
-          `\n\n/* AI 建议 */\n${aiCode}`
-        );
-      });
-    }
-  );
-
-  context.subscriptions.push(disposable);
+  } catch (err) {
+    console.error("CodePatch activate failed", err);
+    vscode.window.showErrorMessage("CodePatch 启动失败");
+  }
 }
 
-export function deactivate() {}
+export function deactivate() {
+  console.log("🧹 CodePatch deactivated");
+}
