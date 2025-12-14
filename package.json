@@ -1,7 +1,7 @@
 {
-  "name": "ai-helper",
-  "displayName": "ai-helper",
-  "description": "help you coder",
+  "name": "code-patch",
+  "displayName": "CodePatch",
+  "description": "Apply AI-powered patches to selected code using local LLMs.",
   "version": "0.0.1",
   "engines": {
     "vscode": "^1.107.0"
@@ -9,13 +9,15 @@
   "categories": [
     "Other"
   ],
-  "activationEvents": [],
+  "activationEvents": [
+    "onCommand:code-patch.ask"
+  ],
   "main": "./out/extension.js",
   "contributes": {
     "commands": [
       {
-        "command": "ai-helper.helloWorld",
-        "title": "Hello World"
+        "command": "code-patch.ask",
+        "title": "AI: 分析选中代码"
       }
     ]
   },
@@ -30,7 +32,7 @@
   "devDependencies": {
     "@types/vscode": "^1.107.0",
     "@types/mocha": "^10.0.10",
-    "@types/node": "22.x",
+    "@types/node": "18.x",
     "typescript-eslint": "^8.48.1",
     "eslint": "^9.39.1",
     "typescript": "^5.9.3",
