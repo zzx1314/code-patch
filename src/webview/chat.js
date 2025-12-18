@@ -1,7 +1,6 @@
 const vscode = acquireVsCodeApi();
 const chat = document.getElementById("chat");
 const input = document.getElementById("input");
-const sendBtn = document.getElementById("send");
 
 let currentContainer = null;
 let currentMarkdown = "";
@@ -22,8 +21,6 @@ input.addEventListener("keydown", (e) => {
     send();
   }
 });
-
-sendBtn.addEventListener("click", send);
 
 // 接收流式消息
 window.addEventListener("message", (e) => {

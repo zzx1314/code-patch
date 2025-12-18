@@ -1,6 +1,5 @@
 body {
   margin: 0;
-  padding: 8px;
   display: flex;
   flex-direction: column;
   height: 100vh;
@@ -54,7 +53,7 @@ footer {
 textarea {
   flex: 1;
   resize: none;
-  height: 48px;
+  height: 20px;
   padding: 6px;
   font-family: inherit;
   background: var(--vscode-input-background);
