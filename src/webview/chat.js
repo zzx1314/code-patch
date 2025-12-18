@@ -21,9 +21,25 @@ function send() {
   input.value = "";
 }
 
-window.addEventListener("message", (e) => {
-  if (e.data.type === "reply") {
-    add("AI", e.data.text);
+let currentAI = null;
+
+window.addEventListener("message", e => {
+  const msg = e.data;
+
+  if (msg.type === "start") {
+    currentAI = document.createElement("div");
+    currentAI.innerHTML = "<b>AI:</b><pre></pre>";
+    chat.appendChild(currentAI);
+  }
+
+  if (msg.type === "stream") {
+    const pre = currentAI.querySelector("pre");
+    pre.textContent += msg.text;
+    chat.scrollTop = chat.scrollHeight;
+  }
+
+  if (msg.type === "end") {
+    currentAI = null;
   }
 });
 
