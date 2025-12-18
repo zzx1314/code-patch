@@ -1,10 +1,21 @@
 const vscode = acquireVsCodeApi();
-
 const chat = document.getElementById("chat");
 const input = document.getElementById("input");
 const sendBtn = document.getElementById("send");
 
-sendBtn.addEventListener("click", send);
+let currentContainer = null;
+let currentMarkdown = "";
+
+// 发送消息
+function send() {
+  const text = input.value.trim();
+  if (!text) return;
+  appendMessage("user", escapeHtml(text));
+  input.value = "";
+  vscode.postMessage({ type: "ask", text });
+}
+
+// 回车发送
 input.addEventListener("keydown", (e) => {
   if (e.key === "Enter" && !e.shiftKey) {
     e.preventDefault();
@@ -12,40 +23,54 @@ input.addEventListener("keydown", (e) => {
   }
 });
 
-function send() {
-  const text = input.value.trim();
-  if (!text) return;
+sendBtn.addEventListener("click", send);
 
-  add("You", text);
-  vscode.postMessage({ type: "ask", text });
-  input.value = "";
-}
-
-let currentAI = null;
-
-window.addEventListener("message", e => {
+// 接收流式消息
+window.addEventListener("message", (e) => {
   const msg = e.data;
 
   if (msg.type === "start") {
-    currentAI = document.createElement("div");
-    currentAI.innerHTML = "<b>AI:</b><pre></pre>";
-    chat.appendChild(currentAI);
+    currentMarkdown = "";
+    currentContainer = document.createElement("div");
+    currentContainer.className = "ai-msg";
+    chat.appendChild(currentContainer);
   }
 
   if (msg.type === "stream") {
-    const pre = currentAI.querySelector("pre");
-    pre.textContent += msg.text;
-    chat.scrollTop = chat.scrollHeight;
+    currentMarkdown += msg.text;
+    renderMarkdown(currentContainer, currentMarkdown);
   }
 
   if (msg.type === "end") {
-    currentAI = null;
+    highlightCode();
   }
 });
 
-function add(role, text) {
-  const p = document.createElement("p");
-  p.innerHTML = `<b>${role}:</b> ${text}`;
-  chat.appendChild(p);
+function appendMessage(role, text) {
+  const div = document.createElement("div");
+  div.className = `msg ${role}`;
+  div.innerHTML = text;
+  chat.appendChild(div);
   chat.scrollTop = chat.scrollHeight;
+}
+
+function renderMarkdown(el, markdown) {
+  el.innerHTML = marked.parse(markdown);
+  chat.scrollTop = chat.scrollHeight;
+}
+
+function highlightCode() {
+  document.querySelectorAll("pre code").forEach((block) => {
+    hljs.highlightElement(block);
+  });
+}
+
+function escapeHtml(str) {
+  return str.replace(/[&<>"']/g, (m) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;"
+  })[m]);
 }

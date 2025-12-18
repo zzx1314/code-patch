@@ -22,6 +22,7 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
       if (msg.type === "ask") {
         webview.postMessage({ type: "start" });
 
+        // 流式请求 Ollama
         await this.callOllamaStream(msg.text, (chunk) => {
           webview.postMessage({
             type: "stream",
@@ -34,26 +35,18 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
   }
 
   private getHtml(webview: vscode.Webview): string {
-    const baseUri = vscode.Uri.joinPath(
-      this.context.extensionUri,
-      "src",
-      "webview"
-    );
-
+    const baseUri = vscode.Uri.joinPath(this.context.extensionUri, "src", "webview");
     const htmlPath = vscode.Uri.joinPath(baseUri, "chat.html");
     let html = fs.readFileSync(htmlPath.fsPath, "utf8");
 
-    const styleUri = webview.asWebviewUri(
-      vscode.Uri.joinPath(baseUri, "chat.css")
-    );
-
-    const scriptUri = webview.asWebviewUri(
-      vscode.Uri.joinPath(baseUri, "chat.js")
-    );
+    const styleUri = webview.asWebviewUri(vscode.Uri.joinPath(baseUri, "chat.css"));
+    const scriptUri = webview.asWebviewUri(vscode.Uri.joinPath(baseUri, "chat.js"));
+    const vendorUri = webview.asWebviewUri(vscode.Uri.joinPath(baseUri, "vendor.bundle.js"));
 
     html = html
       .replace("{{styleUri}}", styleUri.toString())
       .replace("{{scriptUri}}", scriptUri.toString())
+      .replace("{{vendorUri}}", vendorUri.toString())
       .replace(/{{cspSource}}/g, webview.cspSource);
 
     return html;
@@ -82,26 +75,19 @@ export class ChatViewProvider implements vscode.WebviewViewProvider {
       if (done) break;
 
       buffer += decoder.decode(value, { stream: true });
-
       const lines = buffer.split("\n");
       buffer = lines.pop() || "";
 
       for (const line of lines) {
         if (!line.trim()) continue;
-
         try {
           const json = JSON.parse(line);
-          if (json.response) {
-            onToken(json.response);
-          }
-          if (json.done) {
-            return;
-          }
+          if (json.response) onToken(json.response);
+          if (json.done) return;
         } catch (e) {
           // ignore broken chunk
         }
       }
     }
   }
-
 }
